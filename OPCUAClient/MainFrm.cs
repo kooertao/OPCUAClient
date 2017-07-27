@@ -160,7 +160,7 @@ namespace OPCUAClient
                   {
                      MonitoredItem mi = subscr.AddItem(nid);
                      mi.Tag = lvMonitored.Items.Count;     // line index
-                     //mi.Notification += new OnMonitoredItemNotification(mi_Notification);
+                     mi.Notification += new OnMonitoredItemNotification(mi_Notification);
 
                      ListViewItem lvi = lvMonitored.Items.Add(mi.StartNodeId.ToString());
                      lvi.SubItems.Add("??");
@@ -177,17 +177,39 @@ namespace OPCUAClient
          }
       }
 
-      private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
+      void mi_Notification(MonitoredItem monitoredItem, IEncodeable notification)
       {
-         try
-         {
-            if (session != null)
-            {
-               session.Close();    // terminate the open session
-               session.Dispose();
+           try
+           {
+               MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
+               if (dataChange != null)
+               {
+                   string val = dataChange.Value.Value.ToString();
+                   int clh = (int)monitoredItem.Tag;
+                   ListViewItem lvi = lvMonitored.Items[clh];
+                   lvi.SubItems[1].Text = val;
+               }
+               else
+               {
+               }
             }
-         }
-         catch { }
-      }
+            catch (Exception ex)
+            {
+                //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
+            }
+        }
+
+        private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+             try
+             {
+                if (session != null)
+                {
+                   session.Close();    // terminate the open session
+                   session.Dispose();
+                }
+             }
+             catch { }
+        }
    }
 }
