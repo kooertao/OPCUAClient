@@ -34,7 +34,9 @@
          this.tvItems = new System.Windows.Forms.TreeView();
          this.lvItems = new System.Windows.Forms.ListView();
          this.ReadNode = new System.Windows.Forms.Button();
-         this.tbResult = new System.Windows.Forms.TextBox();
+         this.lvMonitored = new System.Windows.Forms.ListView();
+         this.Node = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.Value = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.SuspendLayout();
          // 
          // CreateSessionBtn
@@ -92,21 +94,31 @@
          this.ReadNode.UseVisualStyleBackColor = true;
          this.ReadNode.Click += new System.EventHandler(this.ReadNode_Click);
          // 
-         // tbResult
+         // lvMonitored
          // 
-         this.tbResult.Location = new System.Drawing.Point(140, 346);
-         this.tbResult.Multiline = true;
-         this.tbResult.Name = "tbResult";
-         this.tbResult.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-         this.tbResult.Size = new System.Drawing.Size(250, 134);
-         this.tbResult.TabIndex = 7;
+         this.lvMonitored.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.Node,
+            this.Value});
+         this.lvMonitored.Location = new System.Drawing.Point(140, 344);
+         this.lvMonitored.Name = "lvMonitored";
+         this.lvMonitored.Size = new System.Drawing.Size(372, 153);
+         this.lvMonitored.TabIndex = 7;
+         this.lvMonitored.UseCompatibleStateImageBehavior = false;
+         // 
+         // Node
+         // 
+         this.Node.Text = "Node";
+         // 
+         // Value
+         // 
+         this.Value.Text = "Value";
          // 
          // MainFrm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(755, 509);
-         this.Controls.Add(this.tbResult);
+         this.Controls.Add(this.lvMonitored);
          this.Controls.Add(this.ReadNode);
          this.Controls.Add(this.lvItems);
          this.Controls.Add(this.tvItems);
@@ -117,7 +129,6 @@
          this.Text = "UAClient";
          this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainFrm_FormClosed);
          this.ResumeLayout(false);
-         this.PerformLayout();
 
       }
 
@@ -128,7 +139,9 @@
       private System.Windows.Forms.TreeView tvItems;
       private System.Windows.Forms.ListView lvItems;
       private System.Windows.Forms.Button ReadNode;
-      private System.Windows.Forms.TextBox tbResult;
+      private System.Windows.Forms.ListView lvMonitored;
+      private System.Windows.Forms.ColumnHeader Node;
+      private System.Windows.Forms.ColumnHeader Value;
    }
 }
 

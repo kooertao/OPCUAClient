@@ -17,6 +17,8 @@ namespace OPCUAClient
       private UaClient uaApp;
       private Session session;
       private ShowBrowseTreeList sbtl = null;
+      private Subscription subscr = null;
+
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";//Test
       public MainFrm()
       {
@@ -70,7 +72,7 @@ namespace OPCUAClient
             try
             {
 
-               var subscr = session.AddSubscription("s1", 500);
+               subscr = session.AddSubscription("s1", 500);
 
                subscr.PublishStatusChanged += new EventHandler(onSubscrPublishStatusChanged);
                //subscr.DataChangeCallback += onSubscrDataChangeNotification;
@@ -143,46 +145,34 @@ namespace OPCUAClient
 
       private void ReadNode_Click(object sender, EventArgs e)
       {
-         if (session != null)
+         if (session != null && subscr != null)
          {
-            try
-            {
-               List<NodeId> selNodes = new List<NodeId>();
-               selNodes = sbtl.GetSelectedListViewNodes();
+            List<NodeId> nodes = new List<NodeId>();
+            nodes = sbtl.GetSelectedListViewNodes();
 
-               if (selNodes.Count == 0)
-                  MessageBox.Show("No Item Node Selected.");
-               else
+            if (nodes.Count == 0)
+               MessageBox.Show("no Node Selected.");
+            else
+            {
+               try
                {
-                  tbResult.Text = "reading ...";
-                  List<ReadValueId> nodesToRead = new List<ReadValueId>();
-                  foreach (NodeId selNode in selNodes)
+                  foreach (NodeId nid in nodes)
                   {
-                     ReadValueId rv = new ReadValueId();
-                     rv.NodeId = selNode;
-                     rv.AttributeId = Attributes.Value;
-                     nodesToRead.Add(rv);
+                     MonitoredItem mi = subscr.AddItem(nid);
+                     mi.Tag = lvMonitored.Items.Count;     // line index
+                     //mi.Notification += new OnMonitoredItemNotification(mi_Notification);
+
+                     ListViewItem lvi = lvMonitored.Items.Add(mi.StartNodeId.ToString());
+                     lvi.SubItems.Add("??");
                   }
 
-                  List<DataValue> rslt = session.Read(nodesToRead);
+                  subscr.ApplyChanges();   // create in the server
 
-                  tbResult.Text = "";
-                  for (int i = 0; i < rslt.Count; ++i)
-                  {
-                     DataValue r = rslt[i];
-                     {
-                        string val = "null";
-                        if (r.Value != null)
-                           val = r.Value.ToString();
-                        tbResult.Text += val + "   " + r.StatusCode.ToString() + Environment.NewLine;
-                     }
-                  }
                }
-            }
-            catch (Exception ex)
-            {
-               tbResult.Text = "";
-               MessageBox.Show(ex.Message, "Read Value failed.");
+               catch (Exception ex)
+               {
+                  MessageBox.Show(ex.Message, "Add Items failed.");
+               }
             }
          }
       }
