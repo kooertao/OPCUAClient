@@ -17,7 +17,7 @@ namespace OPCUAClient
       private UaClient uaApp;
       private Session session;
       private ShowBrowseTreeList sbtl = null;
-      private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
+      private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";//Test
       public MainFrm()
       {
          InitializeComponent();
