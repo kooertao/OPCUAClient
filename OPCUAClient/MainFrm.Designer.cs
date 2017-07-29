@@ -119,7 +119,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(755, 470);
+            this.ClientSize = new System.Drawing.Size(783, 470);
             this.Controls.Add(this.lvMonitored);
             this.Controls.Add(this.ReadNode);
             this.Controls.Add(this.lvItems);
