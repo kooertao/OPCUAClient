@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Advosol.EasyUA;
 using Opc.Ua;
+using System.Threading;
 
 namespace OPCUAClient
 {
@@ -23,19 +24,87 @@ namespace OPCUAClient
       public MainFrm()
       {
          InitializeComponent();
-         try
+         //buttons
+         CreateSessionBtn.Enabled = false;
+         AddSubscriptionBtn.Enabled = false;
+         ReadNodeBtn.Enabled = false;
+         BrowseItemsBtn.Enabled = false;
+         LoadUaAppConfiguration();
+      }
+
+      public delegate bool AsyncDelegate();
+
+      /// <summary>
+      /// Create session with opc ua server
+      /// </summary>
+      /// <param name="sender"></param>
+      /// <param name="e"></param>
+      private void CreateSessionBtn_Click(object sender, EventArgs e)
+      {
+         AsyncDelegate andl = new AsyncDelegate(CreateSessionWithUAServer);//声明一个AsyncDelegate类型的对象andl，并让他指向ad对象的TestMethod方法
+
+         IAsyncResult ar = andl.BeginInvoke(null, null);
+         if (andl.EndInvoke(ar))
          {
-            UaClient.UaAppConfigFileAutoCreate = "OPCUAClient";   // auto create a default UA config file to simplify the configuration handling
-            uaApp = new UaClient(this);
-            uaApp.LoadConfiguration();    // process the UA configuration
+            MessageBox.Show("Create session successfully.");
+            CreateSessionBtn.Enabled = false;
+            AddSubscriptionBtn.Enabled = true;
          }
-         catch(Exception ex)
+
+         //try
+         //{
+         //   session = uaApp.CreateSession(UAServerAddress, false, "sessionForUAClient");
+         //   session.ReconnectPeriod = 10000;
+         //   session.SessionTimeout = 60000;
+         //   session.StatusChange += new OnStatusChange(onSessionStatusChange);
+         //   //session.NotifyUntrustedCertificate += new OnNotifyUntrustedCertificate(onSessionNotifyUntrustedCertificate);
+         //   session.NamespaceIndexManagement = true;
+         //   session.Connect(null);
+
+         //   CreateSessionBtn.Enabled = false;
+         //   AddSubscriptionBtn.Enabled = true;
+         //}
+         //catch (Exception ex)
+         //{
+         //   MessageBox.Show(ex.Message, "Create session failed.");
+         //}
+      }
+
+      /// <summary>
+      /// add subscription of opc ua server
+      /// </summary>
+      /// <param name="sender"></param>
+      /// <param name="e"></param>
+      private void AddSubscriptionBtn_Click(object sender, EventArgs e)
+      {
+         if (session != null)
          {
-            MessageBox.Show(ex.Message, "Load UA configuration file failed.");
+            session.SubscriptionRequestKeepaliveCount = 5;
+            session.PublishNotification += new OnNotification(onSessionPublishNotification);
+            try
+            {
+
+               subscr = session.AddSubscription("s1", 500);
+               subscr.PublishStatusChanged += new EventHandler(onSubscrPublishStatusChanged);
+               //subscr.DataChangeCallback += onSubscrDataChangeNotification;
+
+               AddSubscriptionBtn.Enabled = false;
+               ReadNodeBtn.Enabled = true;
+               BrowseItemsBtn.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+               MessageBox.Show(ex.Message, "Add Subscription failed.");
+            }
          }
       }
 
-      private void ReadNodeBtn_Click(object sender, EventArgs e)
+      /// <summary>
+      /// Browse items
+      /// </summary>
+      /// <param name="sender"></param>
+      /// <param name="e"></param>
+      private void BrowseItemsBtn_Click(object sender, EventArgs e)
       {
          if (session != null)
          {
@@ -63,86 +132,11 @@ namespace OPCUAClient
          }
       }
 
-      private void AddSubscriptionBtn_Click(object sender, EventArgs e)
-      {
-         if (session != null)
-         {
-            session.SubscriptionRequestKeepaliveCount = 5;
-            session.PublishNotification += new OnNotification(onSessionPublishNotification);
-            try
-            {
-
-               subscr = session.AddSubscription("s1", 500);
-
-               subscr.PublishStatusChanged += new EventHandler(onSubscrPublishStatusChanged);
-               //subscr.DataChangeCallback += onSubscrDataChangeNotification;
-
-               AddSubscriptionBtn.Enabled = false;
-            }
-            catch (Exception ex)
-            {
-               MessageBox.Show(ex.Message, "Add Subscription failed.");
-            }
-         }
-      }
-
-      void onSessionPublishNotification(Session session, NotificationEventArgs args)
-      {
-         //MessageBox.Show("Session publish notification");
-      }
-      void onSubscrPublishStatusChanged(object sender, EventArgs e)
-      {
-         PublishStatusChangedArgs args = (PublishStatusChangedArgs)e;
-         MessageBox.Show("Status changed: " + args.newState);
-      }
-
-      private void CreateSessionBtn_Click(object sender, EventArgs e)
-      {
-         try
-         {
-            session = uaApp.CreateSession(UAServerAddress, false, "sessionForUAClient");
-            session.ReconnectPeriod = 10000;
-            session.SessionTimeout = 60000;
-            session.StatusChange += new OnStatusChange(onSessionStatusChange);
-            //session.NotifyUntrustedCertificate += new OnNotifyUntrustedCertificate(onSessionNotifyUntrustedCertificate);
-            session.NamespaceIndexManagement = true;
-
-            session.Connect(null);
-
-            //btnCreateSession.Enabled = false;
-            //btnTerminateSession.Enabled = true;
-            //btnAddSubscripton.Enabled = true;
-            //btnDeleteSubscription.Enabled = true;
-            //gbSession.Enabled = true;
-         }
-         catch (Exception ex)
-         {
-            MessageBox.Show(ex.Message, "Create session failed.");
-         }
-      }
-
-      void onSessionStatusChange(Session session, StatusCheckEventArgs e)
-      {
-         try
-         {
-            if (e.Status != null)
-            {
-               string state = e.CurrentState.ToString();
-               //tbServerState.Text = state;
-               //tbNotifications.Text = e.CurrentTime.ToString() + "  " + e.Status.LocalizedText.Text;
-            }
-            else
-            {
-               string state = e.CurrentState.ToString();
-              // tbServerState.Text = state;
-            }
-         }
-         catch (Exception ex)
-         {
-            //tbNotifications.Text = "Status Change  " + ex.Message;
-         }
-      }
-
+      /// <summary>
+      /// Read nodes
+      /// </summary>
+      /// <param name="sender"></param>
+      /// <param name="e"></param>
       private void ReadNode_Click(object sender, EventArgs e)
       {
          if (session != null && subscr != null)
@@ -177,6 +171,78 @@ namespace OPCUAClient
          }
       }
 
+      #region Helper Method
+
+      void LoadUaAppConfiguration()
+      {
+         try
+         {
+            UaClient.UaAppConfigFileAutoCreate = "OPCUAClient";   // auto create a default UA config file to simplify the configuration handling
+            uaApp = new UaClient(this);
+            uaApp.LoadConfiguration();    // process the UA configuration
+
+            CreateSessionBtn.Enabled = true;
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Load UA configuration file failed.");
+         }
+      }
+
+      bool CreateSessionWithUAServer()
+      {
+         try
+         {
+            session = uaApp.CreateSession(UAServerAddress, false, "sessionForUAClient");
+            session.ReconnectPeriod = 10000;
+            session.SessionTimeout = 60000;
+            session.StatusChange += new OnStatusChange(onSessionStatusChange);
+            //session.NotifyUntrustedCertificate += new OnNotifyUntrustedCertificate(onSessionNotifyUntrustedCertificate);
+            session.NamespaceIndexManagement = true;
+            session.Connect(null);
+            Thread.Sleep(2000);
+            return true;
+         }
+         catch (Exception ex)
+         {
+            MessageBox.Show(ex.Message, "Create session failed.");
+            return false;
+         }
+      }
+
+      void onSessionPublishNotification(Session session, NotificationEventArgs args)
+      {
+         //MessageBox.Show("Session publish notification");
+      }
+      void onSubscrPublishStatusChanged(object sender, EventArgs e)
+      {
+         PublishStatusChangedArgs args = (PublishStatusChangedArgs)e;
+         MessageBox.Show("Status changed: " + args.newState);
+      }
+
+      void onSessionStatusChange(Session session, StatusCheckEventArgs e)
+      {
+         try
+         {
+            if (e.Status != null)
+            {
+               string state = e.CurrentState.ToString();
+               tbServerState.Text = state;
+               //tbNotifications.Text = e.CurrentTime.ToString() + "  " + e.Status.LocalizedText.Text;
+            }
+            else
+            {
+               string state = e.CurrentState.ToString();
+               tbServerState.Text = state;
+            }
+         }
+         catch (Exception ex)
+         {
+            //tbNotifications.Text = "Status Change  " + ex.Message;
+         }
+      }
+
+
       void mi_Notification(MonitoredItem monitoredItem, IEncodeable notification)
       {
            try
@@ -198,18 +264,19 @@ namespace OPCUAClient
                 //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
             }
         }
+      #endregion
 
-        private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-             try
-             {
-                if (session != null)
-                {
-                   session.Close();    // terminate the open session
-                   session.Dispose();
-                }
-             }
-             catch { }
-        }
+      private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
+      {
+            try
+            {
+               if (session != null)
+               {
+                  session.Close();    // terminate the open session
+                  session.Dispose();
+               }
+            }
+            catch { }
+      }
    }
 }
