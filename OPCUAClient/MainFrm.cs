@@ -1,15 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Advosol.EasyUA;
 using Opc.Ua;
-using System.Threading;
+using Microsoft.AspNet.SignalR.Client; //PM> Install-package Microsoft.AspNet.SignalR.Client
 
 namespace OPCUAClient
 {
@@ -50,24 +44,6 @@ namespace OPCUAClient
             CreateSessionBtn.Enabled = false;
             AddSubscriptionBtn.Enabled = true;
          }
-
-         //try
-         //{
-         //   session = uaApp.CreateSession(UAServerAddress, false, "sessionForUAClient");
-         //   session.ReconnectPeriod = 10000;
-         //   session.SessionTimeout = 60000;
-         //   session.StatusChange += new OnStatusChange(onSessionStatusChange);
-         //   //session.NotifyUntrustedCertificate += new OnNotifyUntrustedCertificate(onSessionNotifyUntrustedCertificate);
-         //   session.NamespaceIndexManagement = true;
-         //   session.Connect(null);
-
-         //   CreateSessionBtn.Enabled = false;
-         //   AddSubscriptionBtn.Enabled = true;
-         //}
-         //catch (Exception ex)
-         //{
-         //   MessageBox.Show(ex.Message, "Create session failed.");
-         //}
       }
 
       /// <summary>
@@ -161,7 +137,6 @@ namespace OPCUAClient
                   }
 
                   subscr.ApplyChanges();   // create in the server
-
                }
                catch (Exception ex)
                {
@@ -200,7 +175,6 @@ namespace OPCUAClient
             //session.NotifyUntrustedCertificate += new OnNotifyUntrustedCertificate(onSessionNotifyUntrustedCertificate);
             session.NamespaceIndexManagement = true;
             session.Connect(null);
-            Thread.Sleep(2000);
             return true;
          }
          catch (Exception ex)
@@ -217,7 +191,7 @@ namespace OPCUAClient
       void onSubscrPublishStatusChanged(object sender, EventArgs e)
       {
          PublishStatusChangedArgs args = (PublishStatusChangedArgs)e;
-         MessageBox.Show("Status changed: " + args.newState);
+         //MessageBox.Show("Status changed: " + args.newState);
       }
 
       void onSessionStatusChange(Session session, StatusCheckEventArgs e)
@@ -245,25 +219,56 @@ namespace OPCUAClient
 
       void mi_Notification(MonitoredItem monitoredItem, IEncodeable notification)
       {
-           try
-           {
-               MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
-               if (dataChange != null)
-               {
-                   string val = dataChange.Value.Value.ToString();
-                   int clh = (int)monitoredItem.Tag;
-                   ListViewItem lvi = lvMonitored.Items[clh];
-                   lvi.SubItems[1].Text = val;
-               }
-               else
-               {
-               }
-            }
-            catch (Exception ex)
+         try
+         {
+            MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
+            if (dataChange != null)
             {
-                //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
+               //Transform data by signalR(For realTimeView)
+               var processVariable = new ProcessVariableUIInfo
+               {
+                  VariableName = monitoredItem.StartNodeId.Identifier.ToString(),
+                  VariableValue = Convert.ToDouble(dataChange.Value.Value)
+               };
+               TransferDataBySignalR(processVariable);
+
+               //Save to DB(Web access) TODO!!!!
+               string val = dataChange.Value.Value.ToString();
+               int clh = (int)monitoredItem.Tag;
+               ListViewItem lvi = lvMonitored.Items[clh];
+               lvi.SubItems[1].Text = val;
             }
-        }
+            else
+            {
+            }
+         }
+         catch (Exception ex)
+         {
+            //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
+         }
+      }
+
+      void TransferDataBySignalR(ProcessVariableUIInfo processVariables)
+      {
+         var hubConnection = new HubConnection("http://localhost:10282/");
+         IHubProxy hubProxy = hubConnection.CreateHubProxy("MessageHub");
+         hubConnection.Start().Wait();
+         
+         //PerformanceCounter cpuCounter = new PerformanceCounter
+         //{
+         //   CategoryName = "Processor",
+         //   CounterName = "% Processor Time",
+         //   InstanceName = "_Total"
+         //};
+         //string cpuUsage = (cpuCounter.NextValue()).ToString();
+
+         //Console.WriteLine(cpuUsage);
+
+         if (hubConnection.State == ConnectionState.Connected)
+         {
+            hubProxy.Invoke("SendMessage", processVariables);
+         }
+      }
       #endregion
 
       private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
