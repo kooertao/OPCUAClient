@@ -230,7 +230,7 @@ namespace OPCUAClient
                   VariableName = monitoredItem.StartNodeId.Identifier.ToString(),
                   VariableValue = Convert.ToDouble(dataChange.Value.Value)
                };
-               TransferDataBySignalR(processVariable);
+               TransferDataBySignalR(dataChange.Value.Value.ToString());
 
                //Save to DB(Web access) TODO!!!!
                string val = dataChange.Value.Value.ToString();
@@ -248,25 +248,15 @@ namespace OPCUAClient
          }
       }
 
-      void TransferDataBySignalR(ProcessVariableUIInfo processVariables)
+      void TransferDataBySignalR(string value)
       {
          var hubConnection = new HubConnection("http://localhost:10282/");
-         IHubProxy hubProxy = hubConnection.CreateHubProxy("MessageHub");
+         IHubProxy hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
          hubConnection.Start().Wait();
-         
-         //PerformanceCounter cpuCounter = new PerformanceCounter
-         //{
-         //   CategoryName = "Processor",
-         //   CounterName = "% Processor Time",
-         //   InstanceName = "_Total"
-         //};
-         //string cpuUsage = (cpuCounter.NextValue()).ToString();
-
-         //Console.WriteLine(cpuUsage);
 
          if (hubConnection.State == ConnectionState.Connected)
          {
-            hubProxy.Invoke("SendMessage", processVariables);
+            hubProxy.Invoke("SendMessage", value);
          }
       }
       #endregion
