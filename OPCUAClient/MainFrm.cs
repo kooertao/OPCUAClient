@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Advosol.EasyUA;
 using Opc.Ua;
-using Microsoft.AspNet.SignalR.Client; //PM> Install-package Microsoft.AspNet.SignalR.Client
+using System.Threading.Tasks;
+using Microsoft.AspNet.SignalR.Client;
 
 namespace OPCUAClient
 {
@@ -13,6 +14,8 @@ namespace OPCUAClient
       private Session session;
       private ShowBrowseTreeList sbtl = null;
       private Subscription subscr = null;
+      private HubConnection hubConnection;
+      private IHubProxy hubProxy;
 
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
       public MainFrm()
@@ -24,6 +27,9 @@ namespace OPCUAClient
          ReadNodeBtn.Enabled = false;
          BrowseItemsBtn.Enabled = false;
          LoadUaAppConfiguration();
+         hubConnection = new HubConnection("http://localhost:8575/");
+         hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
+         hubConnection.Start().Wait();
       }
 
       public delegate bool AsyncDelegate();
@@ -126,6 +132,7 @@ namespace OPCUAClient
             {
                try
                {
+                  
                   foreach (NodeId nid in nodes)
                   {
                      MonitoredItem mi = subscr.AddItem(nid);
@@ -230,8 +237,8 @@ namespace OPCUAClient
                   VariableName = monitoredItem.StartNodeId.Identifier.ToString(),
                   VariableValue = Convert.ToDouble(dataChange.Value.Value)
                };
-               TransferDataBySignalR(dataChange.Value.Value.ToString());
 
+               TransferDataBySignalR(dataChange.Value.Value.ToString());
                //Save to DB(Web access) TODO!!!!
                string val = dataChange.Value.Value.ToString();
                int clh = (int)monitoredItem.Tag;
@@ -242,18 +249,18 @@ namespace OPCUAClient
             {
             }
          }
-         catch (Exception ex)
+         //catch (Exception ex)
+         //{
+         //   //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
+         //}
+         catch (AggregateException e)
          {
-            //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
+
          }
       }
 
       void TransferDataBySignalR(string value)
       {
-         var hubConnection = new HubConnection("http://localhost:10282/");
-         IHubProxy hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
-         hubConnection.Start().Wait();
-
          if (hubConnection.State == ConnectionState.Connected)
          {
             hubProxy.Invoke("SendMessage", value);
