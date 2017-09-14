@@ -46,9 +46,29 @@ namespace OPCUAClient
          IAsyncResult ar = andl.BeginInvoke(null, null);
          if (andl.EndInvoke(ar))
          {
-            MessageBox.Show("Create session successfully.");
+            //MessageBox.Show("Create session successfully.");
             CreateSessionBtn.Enabled = false;
-            AddSubscriptionBtn.Enabled = true;
+            //AddSubscriptionBtn.Enabled = true;
+            if (session != null)
+            {
+               session.SubscriptionRequestKeepaliveCount = 5;
+               session.PublishNotification += new OnNotification(onSessionPublishNotification);
+
+               try
+               {
+                  //subscription name: s1
+                  subscr = session.AddSubscription("s1", 500);
+                  subscr.PublishStatusChanged += new EventHandler(onSubscrPublishStatusChanged);
+                  //subscr.DataChangeCallback += onSubscrDataChangeNotification;
+                  AddSubscriptionBtn.Enabled = false;
+                  ReadNodeBtn.Enabled = true;
+                  BrowseItemsBtn.Enabled = true;
+               }
+               catch (Exception ex)
+               {
+                  MessageBox.Show(ex.Message, "Add Subscription failed.");
+               }
+            }            
          }
       }
 
@@ -59,7 +79,7 @@ namespace OPCUAClient
       /// <param name="e"></param>
       private void AddSubscriptionBtn_Click(object sender, EventArgs e)
       {
-         if (session != null)
+         /*if (session != null)
          {
             session.SubscriptionRequestKeepaliveCount = 5;
             session.PublishNotification += new OnNotification(onSessionPublishNotification);
@@ -78,7 +98,7 @@ namespace OPCUAClient
             {
                MessageBox.Show(ex.Message, "Add Subscription failed.");
             }
-         }
+         }*/
       }
 
       /// <summary>
@@ -90,7 +110,9 @@ namespace OPCUAClient
       {
          if (session != null)
          {
-            try
+            string writeNode = "ns=2;s=Static.Simple Types.Int";
+            var writeNodeInfo = session.ReadNode(writeNode);  // read the node details to get the datatype
+            /*try
             {
                if (sbtl != null)    // previous treeList instance
                {
@@ -110,7 +132,7 @@ namespace OPCUAClient
             catch (Exception ex)
             {
                MessageBox.Show(ex.Message, "Browse failed.");
-            }
+            }*/
          }
       }
 
