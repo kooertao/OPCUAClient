@@ -16,6 +16,9 @@ namespace OPCUAClient
       private Subscription subscr = null;
       private HubConnection hubConnection;
       private IHubProxy hubProxy;
+      private Browser browser;
+      private List<object> lbRootObjects;
+      private List<object> lbNodeObjects;
 
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
       public MainFrm()
@@ -30,6 +33,8 @@ namespace OPCUAClient
          hubConnection = new HubConnection("http://localhost:8575/");
          hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
          hubConnection.Start().Wait();
+         lbRootObjects = new List<object>();
+         lbNodeObjects = new List<object>();
       }
 
       public delegate bool AsyncDelegate();
@@ -110,8 +115,16 @@ namespace OPCUAClient
       {
          if (session != null)
          {
-            string writeNode = "ns=2;s=Static.Simple Types.Int";
-            var writeNodeInfo = session.ReadNode(writeNode);  // read the node details to get the datatype
+            //string writeNode = "ns=2;s=Static.Simple Types.Int";
+            if (browser == null)
+            {
+               browser = session.CreateBrowser();
+            }
+            
+            browser.BeginBrowse(browser.ServerRootNode, NodeClass.Object | NodeClass.Variable | NodeClass.Method, onBrowseRoot, null);
+
+            //browser.BeginBrowse((NodeId)selRef.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method, onBrowseNode, null);
+            //var writeNodeInfo = session.ReadNodes(writeNode);  // read the node details to get the datatype
             /*try
             {
                if (sbtl != null)    // previous treeList instance
@@ -301,6 +314,44 @@ namespace OPCUAClient
                }
             }
             catch { }
+      }
+
+      private void onBrowseRoot(IAsyncResult ar)
+      {
+         AsyncResultBase arb = (AsyncResultBase)ar;
+         ReferenceDescriptionCollection refs = browser.EndBrowse(ar);
+
+         if (arb.Exception == null)
+         {
+            foreach (ReferenceDescription rd in refs)
+            {
+               //lbRootObjects.Items.Add(rd);
+               lbRootObjects.Add(rd);
+               browser.BeginBrowse((NodeId)rd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method, onBrowseNode, null);
+            }
+         }
+         else
+         {
+            MessageBox.Show(arb.Exception.Message, "Browse failed.");
+         }
+      }
+      //C:\Program Files\Advosol\EasyUA Client SDK\Samples C#\UaSampleClient
+      private void onBrowseNode(IAsyncResult ar)
+      {
+         AsyncResultBase arb = (AsyncResultBase)ar;
+         ReferenceDescriptionCollection refs = browser.EndBrowse(ar);
+
+         if (arb.Exception == null)
+         {
+            foreach (ReferenceDescription rd in refs)
+            {
+               lbNodeObjects.Add(rd);
+            }
+         }
+         else
+         {
+            MessageBox.Show(arb.Exception.Message, "Browse failed.");
+         }
       }
    }
 }
