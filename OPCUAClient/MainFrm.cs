@@ -12,13 +12,20 @@ namespace OPCUAClient
    {
       private UaClient uaApp;
       private Session session;
-      private ShowBrowseTreeList sbtl = null;
       private Subscription subscr = null;
       private HubConnection hubConnection;
       private IHubProxy hubProxy;
-      private Browser browser;
-      private List<object> lbRootObjects;
-      private List<object> lbNodeObjects;
+      private List<string>readNodesList = new List<string>{ "ns=2;s=LHe.ProcessVariables.Pressure#1",
+                                                            "ns=2;s=LHe.ProcessVariables.Pressure#2",
+                                                            "ns=2;s=LHe.ProcessVariables.Pressure#3",
+                                                            "ns=2;s=LHe.ProcessVariables.Temperature#1",
+                                                            "ns=2;s=LHe.ProcessVariables.Temperature#2",
+                                                            "ns=2;s=LHe.ProcessVariables.Temperature#3",
+                                                            "ns=2;s=Tao.ProcessVariables.Pressure#1",
+                                                            "ns=2;s=Tao.ProcessVariables.Pressure#2",
+                                                            "ns=2;s=Tao.ProcessVariables.Temperature#1",
+                                                            "ns=2;s=Tao.ProcessVariables.Temperature#2"};
+
 
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
       public MainFrm()
@@ -26,15 +33,11 @@ namespace OPCUAClient
          InitializeComponent();
          //buttons
          CreateSessionBtn.Enabled = false;
-         AddSubscriptionBtn.Enabled = false;
          ReadNodeBtn.Enabled = false;
-         BrowseItemsBtn.Enabled = false;
          LoadUaAppConfiguration();
          hubConnection = new HubConnection("http://localhost:8575/");
          hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
-         hubConnection.Start().Wait();
-         lbRootObjects = new List<object>();
-         lbNodeObjects = new List<object>();
+         //hubConnection.Start().Wait();
       }
 
       public delegate bool AsyncDelegate();
@@ -65,87 +68,13 @@ namespace OPCUAClient
                   subscr = session.AddSubscription("s1", 500);
                   subscr.PublishStatusChanged += new EventHandler(onSubscrPublishStatusChanged);
                   //subscr.DataChangeCallback += onSubscrDataChangeNotification;
-                  AddSubscriptionBtn.Enabled = false;
                   ReadNodeBtn.Enabled = true;
-                  BrowseItemsBtn.Enabled = true;
                }
                catch (Exception ex)
                {
                   MessageBox.Show(ex.Message, "Add Subscription failed.");
                }
             }            
-         }
-      }
-
-      /// <summary>
-      /// add subscription of opc ua server
-      /// </summary>
-      /// <param name="sender"></param>
-      /// <param name="e"></param>
-      private void AddSubscriptionBtn_Click(object sender, EventArgs e)
-      {
-         /*if (session != null)
-         {
-            session.SubscriptionRequestKeepaliveCount = 5;
-            session.PublishNotification += new OnNotification(onSessionPublishNotification);
-            try
-            {
-
-               subscr = session.AddSubscription("s1", 500);
-               subscr.PublishStatusChanged += new EventHandler(onSubscrPublishStatusChanged);
-               //subscr.DataChangeCallback += onSubscrDataChangeNotification;
-
-               AddSubscriptionBtn.Enabled = false;
-               ReadNodeBtn.Enabled = true;
-               BrowseItemsBtn.Enabled = true;
-            }
-            catch (Exception ex)
-            {
-               MessageBox.Show(ex.Message, "Add Subscription failed.");
-            }
-         }*/
-      }
-
-      /// <summary>
-      /// Browse items
-      /// </summary>
-      /// <param name="sender"></param>
-      /// <param name="e"></param>
-      private void BrowseItemsBtn_Click(object sender, EventArgs e)
-      {
-         if (session != null)
-         {
-            //string writeNode = "ns=2;s=Static.Simple Types.Int";
-            if (browser == null)
-            {
-               browser = session.CreateBrowser();
-            }
-            
-            browser.BeginBrowse(browser.ServerRootNode, NodeClass.Object | NodeClass.Variable | NodeClass.Method, onBrowseRoot, null);
-
-            //browser.BeginBrowse((NodeId)selRef.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method, onBrowseNode, null);
-            //var writeNodeInfo = session.ReadNodes(writeNode);  // read the node details to get the datatype
-            /*try
-            {
-               if (sbtl != null)    // previous treeList instance
-               {
-                  sbtl.Dispose();
-                  sbtl = null;
-               }
-
-               lvItems.Items.Clear();
-               tvItems.Nodes.Clear();
-               sbtl = new ShowBrowseTreeList(session, tvItems, lvItems);
-               if (sbtl != null)
-               {
-                  sbtl.Show("UaServer");
-               }
-
-            }
-            catch (Exception ex)
-            {
-               MessageBox.Show(ex.Message, "Browse failed.");
-            }*/
          }
       }
 
@@ -158,33 +87,17 @@ namespace OPCUAClient
       {
          if (session != null && subscr != null)
          {
-            List<NodeId> nodes = new List<NodeId>();
-            nodes = sbtl.GetSelectedListViewNodes();
-
-            if (nodes.Count == 0)
-               MessageBox.Show("no Node Selected.");
-            else
+            foreach (var nodeId in readNodesList)
             {
-               try
-               {
-                  
-                  foreach (NodeId nid in nodes)
-                  {
-                     MonitoredItem mi = subscr.AddItem(nid);
-                     mi.Tag = lvMonitored.Items.Count;     // line index
-                     mi.Notification += new OnMonitoredItemNotification(mi_Notification);
-
-                     ListViewItem lvi = lvMonitored.Items.Add(mi.StartNodeId.ToString());
-                     lvi.SubItems.Add("??");
-                  }
-
-                  subscr.ApplyChanges();   // create in the server
-               }
-               catch (Exception ex)
-               {
-                  MessageBox.Show(ex.Message, "Add Items failed.");
-               }
+               MonitoredItem mi = subscr.AddItem(nodeId);
+               mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
+               //For show
+               mi.Tag = lvMonitored.Items.Count;     // line index
+               ListViewItem lvi = lvMonitored.Items.Add(mi.StartNodeId.ToString());
+               lvi.SubItems.Add("??");
             }
+            subscr.ApplyChanges();   // create in the server
+
          }
       }
 
@@ -257,50 +170,6 @@ namespace OPCUAClient
             //tbNotifications.Text = "Status Change  " + ex.Message;
          }
       }
-
-
-      void mi_Notification(MonitoredItem monitoredItem, IEncodeable notification)
-      {
-         try
-         {
-            MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
-            if (dataChange != null)
-            {
-               //Transform data by signalR(For realTimeView)
-               var processVariable = new ProcessVariableUIInfo
-               {
-                  VariableName = monitoredItem.StartNodeId.Identifier.ToString(),
-                  VariableValue = Convert.ToDouble(dataChange.Value.Value)
-               };
-
-               TransferDataBySignalR(dataChange.Value.Value.ToString());
-               //Save to DB(Web access) TODO!!!!
-               string val = dataChange.Value.Value.ToString();
-               int clh = (int)monitoredItem.Tag;
-               ListViewItem lvi = lvMonitored.Items[clh];
-               lvi.SubItems[1].Text = val;
-            }
-            else
-            {
-            }
-         }
-         //catch (Exception ex)
-         //{
-         //   //tbPublishNotification.Text = monitoredItem.DisplayName + ":  " + ex.Message;
-         //}
-         catch (AggregateException e)
-         {
-
-         }
-      }
-
-      void TransferDataBySignalR(string value)
-      {
-         if (hubConnection.State == ConnectionState.Connected)
-         {
-            hubProxy.Invoke("SendMessage", value);
-         }
-      }
       #endregion
 
       private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
@@ -316,41 +185,35 @@ namespace OPCUAClient
             catch { }
       }
 
-      private void onBrowseRoot(IAsyncResult ar)
+      private void miRamp_Notification(MonitoredItem monitoredItem, IEncodeable notification)
       {
-         AsyncResultBase arb = (AsyncResultBase)ar;
-         ReferenceDescriptionCollection refs = browser.EndBrowse(ar);
-
-         if (arb.Exception == null)
+         try
          {
-            foreach (ReferenceDescription rd in refs)
+            MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
+            if (dataChange != null)
             {
-               //lbRootObjects.Items.Add(rd);
-               lbRootObjects.Add(rd);
-               browser.BeginBrowse((NodeId)rd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method, onBrowseNode, null);
+               object val = dataChange.Value.Value;   // the changed value of the subscribed MonitoredItem
+
+               int clh = (int)monitoredItem.Tag;
+               ListViewItem lvi = lvMonitored.Items[clh];
+               lvi.SubItems[1].Text = val.ToString();
+               TransferDataBySignalR(monitoredItem.ResolvedNodeId.ToString(), dataChange.Value.Value.ToString());
+            }
+            else
+            {
             }
          }
-         else
+         catch (Exception ex)
          {
-            MessageBox.Show(arb.Exception.Message, "Browse failed.");
+            Console.WriteLine(monitoredItem.DisplayName + ":  " + ex.Message);
          }
       }
-      //C:\Program Files\Advosol\EasyUA Client SDK\Samples C#\UaSampleClient
-      private void onBrowseNode(IAsyncResult ar)
-      {
-         AsyncResultBase arb = (AsyncResultBase)ar;
-         ReferenceDescriptionCollection refs = browser.EndBrowse(ar);
 
-         if (arb.Exception == null)
+      private void TransferDataBySignalR(string NodeId, string value)
+      {
+         if (hubConnection.State == ConnectionState.Connected)
          {
-            foreach (ReferenceDescription rd in refs)
-            {
-               lbNodeObjects.Add(rd);
-            }
-         }
-         else
-         {
-            MessageBox.Show(arb.Exception.Message, "Browse failed.");
+            hubProxy.Invoke("SendMessage", NodeId, value);
          }
       }
    }
