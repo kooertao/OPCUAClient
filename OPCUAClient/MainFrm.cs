@@ -37,7 +37,7 @@ namespace OPCUAClient
          LoadUaAppConfiguration();
          hubConnection = new HubConnection("http://localhost:8575/");
          hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
-         //hubConnection.Start().Wait();
+         hubConnection.Start().Wait();
       }
 
       public delegate bool AsyncDelegate();
