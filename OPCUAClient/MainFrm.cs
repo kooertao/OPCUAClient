@@ -35,9 +35,7 @@ namespace OPCUAClient
          CreateSessionBtn.Enabled = false;
          ReadNodeBtn.Enabled = false;
          LoadUaAppConfiguration();
-         hubConnection = new HubConnection("http://localhost:8575/");
-         hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
-         hubConnection.Start().Wait();
+         ConnectHub();
       }
 
       public delegate bool AsyncDelegate();
@@ -197,10 +195,10 @@ namespace OPCUAClient
                int clh = (int)monitoredItem.Tag;
                ListViewItem lvi = lvMonitored.Items[clh];
                lvi.SubItems[1].Text = val.ToString();
-               TransferDataBySignalR(monitoredItem.ResolvedNodeId.ToString(), dataChange.Value.Value.ToString());
-            }
-            else
-            {
+               if(hubConnection.State == ConnectionState.Connected)
+               {
+                  TransferDataBySignalR(monitoredItem.ResolvedNodeId.ToString(), dataChange.Value.Value.ToString());
+               }
             }
          }
          catch (Exception ex)
@@ -214,6 +212,21 @@ namespace OPCUAClient
          if (hubConnection.State == ConnectionState.Connected)
          {
             hubProxy.Invoke("SendMessage", NodeId, value);
+         }
+      }
+
+      private void ConnectHub()
+      {
+         try
+         {
+            hubConnection = new HubConnection("http://localhost:8575/");
+            hubProxy = hubConnection.CreateHubProxy("OPCUAHub");
+            hubConnection.Start().Wait();
+         }
+         catch (Exception ex)
+         {
+            // The error should have the html returned.
+            Console.WriteLine(ex.GetError());
          }
       }
    }
