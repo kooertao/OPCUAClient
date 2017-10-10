@@ -14,8 +14,6 @@ namespace OPCUAClient
       private OPCUaClient Client;
       private HubConnection hubConnection;
       private IHubProxy hubProxy;
-      private List<string> readNodesList = new List<string>();
-      private PersistenceManager persistenceManager = new PersistenceManager();
       
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
       public MainFrm()  
@@ -42,13 +40,10 @@ namespace OPCUAClient
       /// <param name="sender"></param>
       /// <param name="e"></param>
       private void ReadNode_Click(object sender, EventArgs e)
-      {        
+      {
          foreach (var nodeId in Client.NodeIdsListForProcessVariables)
          {
             MonitoredItem mi = Client.Subscr.AddItem(nodeId);
-            mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
-            //For show
-            mi.Tag = lvMonitored.Items.Count;     // line index
             ListViewItem lvi = lvMonitored.Items.Add(mi.StartNodeId.ToString());
             lvi.SubItems.Add("??");
          }
@@ -59,42 +54,7 @@ namespace OPCUAClient
       {
       }
 
-      private delegate void LvMonitorUpdate();
-      private void miRamp_Notification(MonitoredItem monitoredItem, IEncodeable notification)
-      {
-         try
-         {
-            MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
-            if (dataChange != null)
-            {
-               object val = dataChange.Value.Value;   // the changed value of the subscribed MonitoredItem
-               var nodeId = monitoredItem.ResolvedNodeId;
-               //Persist data
-               string[] paths = nodeId.ToString().Substring(7, nodeId.ToString().Length - 7).Split('.');
-               //var machineName = paths[0]; var variableName = paths[2];
-               persistenceManager.SaveMachineProcessVariable(paths[0], paths[2], (float)val, DateTime.Now);
-               int clh = (int)monitoredItem.Tag;
-               if(this.InvokeRequired)
-               {
-                  this.Invoke(new MethodInvoker (()=> 
-                  {
-                     ListViewItem lvi = lvMonitored.Items[clh];
-                     lvi.SubItems[1].Text = val.ToString();
-                  }));
-               }
-               
-               if(hubConnection.State == ConnectionState.Connected)
-               {
-                  TransferDataBySignalR(monitoredItem.ResolvedNodeId.ToString(), dataChange.Value.Value.ToString());
-               }
-            }
-         }
-         catch (Exception ex)
-         {
-            Console.WriteLine(monitoredItem.DisplayName + ":  " + ex.Message);
-         }
-      }
-
+      //private delegate void LvMonitorUpdate();
       private void TransferDataBySignalR(string NodeId, string value)
       {
          if (hubConnection.State == ConnectionState.Connected)

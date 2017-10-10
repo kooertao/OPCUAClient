@@ -15,7 +15,6 @@ namespace LHe.DomainModel
       [Key]
       [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
       public int Id { get; set; }
-      public int VariableId { get; set; }
       public string VariableName { get; set; }
       public float Value { get; set; }
       public DateTime Timestamp { get; set; }

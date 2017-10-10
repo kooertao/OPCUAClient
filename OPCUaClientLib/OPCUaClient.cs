@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using log4net;
 using Advosol.EasyUA;
 using Opc.Ua;
+using LHe.DomainModel;
 
 namespace LHe.OPCUaClientLib
 {
@@ -24,8 +24,9 @@ namespace LHe.OPCUaClientLib
       private Session _Session;
       //private Subscription _Subscr;
       private Browser _Browser;
-      
-      
+      private PersistenceManager persistenceManager = new PersistenceManager();
+
+
       private const string ServerRoot = "ns=2;s=LHE Machines";
       public delegate bool AsyncDelegate();
 
@@ -107,7 +108,7 @@ namespace LHe.OPCUaClientLib
          }
       }
 
-      private void GetNodeIdsList() 
+      private void GetNodeIdsList()
       {
          if (_Session != null && Subscr != null)
          {
@@ -118,7 +119,6 @@ namespace LHe.OPCUaClientLib
             ReferenceDescriptionCollection refs = _Browser.Browse((NodeId)ServerRoot, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
             foreach (ReferenceDescription rd in refs)
             {
-               //lbNodeObjects.Items.Add(rd);
                ReferenceDescriptionCollection subRefs = _Browser.Browse((NodeId)rd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
                foreach (ReferenceDescription rdd in subRefs)
                {
@@ -152,6 +152,31 @@ namespace LHe.OPCUaClientLib
                   }
                }
             }
+            foreach (var nodeId in NodeIdsListForProcessVariables)
+            {
+               MonitoredItem mi = Subscr.AddItem(nodeId);
+               mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
+            }
+         }
+      }
+      private void miRamp_Notification(MonitoredItem monitoredItem, IEncodeable notification)
+      {
+         try
+         {
+            MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
+            if (dataChange != null)
+            {
+               object val = dataChange.Value.Value;   // the changed value of the subscribed MonitoredItem
+               var nodeId = monitoredItem.ResolvedNodeId;
+               //Persist data
+               string[] paths = nodeId.ToString().Substring(7, nodeId.ToString().Length - 7).Split('.');
+               //var machineName = paths[0]; var variableName = paths[2];
+               persistenceManager.SaveMachineProcessVariable(paths[0], paths[2], (float)val, DateTime.Now);
+            }
+         }
+         catch (Exception ex)
+         {
+            Console.WriteLine(monitoredItem.DisplayName + ":  " + ex.Message);
          }
       }
 
@@ -184,5 +209,6 @@ namespace LHe.OPCUaClientLib
             //tbNotifications.Text = "Status Change  " + ex.Message;
          }
       }
+
    }
 }
