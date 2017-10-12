@@ -157,6 +157,7 @@ namespace LHe.OPCUaClientLib
                MonitoredItem mi = Subscr.AddItem(nodeId);
                mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
             }
+            Subscr.ApplyChanges();
          }
       }
       private void miRamp_Notification(MonitoredItem monitoredItem, IEncodeable notification)

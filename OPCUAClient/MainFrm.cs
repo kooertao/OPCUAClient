@@ -19,11 +19,9 @@ namespace OPCUAClient
       public MainFrm()  
       {
          InitializeComponent();
-         ReadNodeBtn.Enabled = false;
          Client = new OPCUaClient(UAServerAddress);
          if (Client.IsConnected)
          {
-            ReadNodeBtn.Enabled = true;
             tbServerState.Text = "Connected.";
          }
          else
@@ -32,22 +30,6 @@ namespace OPCUAClient
          }
          ConnectHub();
          tbHubState.Text = hubConnection.State.ToString();
-      }
-
-      /// <summary>
-      /// Read nodes
-      /// </summary>
-      /// <param name="sender"></param>
-      /// <param name="e"></param>
-      private void ReadNode_Click(object sender, EventArgs e)
-      {
-         foreach (var nodeId in Client.NodeIdsListForProcessVariables)
-         {
-            MonitoredItem mi = Client.Subscr.AddItem(nodeId);
-            ListViewItem lvi = lvMonitored.Items.Add(mi.StartNodeId.ToString());
-            lvi.SubItems.Add("??");
-         }
-         Client.Subscr.ApplyChanges();   // create in the server
       }
 
       private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
