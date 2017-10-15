@@ -9,6 +9,39 @@ namespace LHe.DomainModel
 {
    public class PersistenceManager
    {
+      public void SaveMachineState(string machineName, string state, DateTime timestamp)
+      {
+         using (var db = new OPCDbContext())
+         {
+            var machine = GetOrCreateMachine(db, machineName, timestamp);
+
+            db.MachineStates.Add(new MachineState
+            {
+               Machine = machine,
+               State = state,
+               Timestamp = timestamp
+            });
+
+            db.SaveChanges();
+         }
+      }
+
+      public void SaveMachineCycleInterruption(string machineName, string downReason, DateTime timestamp)
+      {
+         using (var db = new OPCDbContext())
+         {
+            var machine = GetOrCreateMachine(db, machineName, timestamp);
+
+            db.CycleInterruptions.Add(new CycleInterruption
+            {
+               Machine = machine,
+               Reason = downReason,
+               Timestamp = timestamp
+            });
+
+            db.SaveChanges();
+         }
+      }
       public void SaveMachine(string machineName, DateTime timestamp)
       {
          using (var db = new OPCDbContext())

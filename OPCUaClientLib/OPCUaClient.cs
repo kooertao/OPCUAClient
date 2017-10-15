@@ -24,7 +24,7 @@ namespace LHe.OPCUaClientLib
       private Session _Session;
       //private Subscription _Subscr;
       private Browser _Browser;
-      private PersistenceManager persistenceManager = new PersistenceManager();
+      private PersistenceManager _PersistenceModel = new PersistenceManager();
 
 
       private const string ServerRoot = "ns=2;s=LHE Machines";
@@ -116,47 +116,63 @@ namespace LHe.OPCUaClientLib
             {
                _Browser = _Session.CreateBrowser();
             }
+            //machine： LHe,Tao
             ReferenceDescriptionCollection refs = _Browser.Browse((NodeId)ServerRoot, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
             foreach (ReferenceDescription rd in refs)
             {
+               //LHe:MachineState,ProcessVariables and cycleInterrupt
                ReferenceDescriptionCollection subRefs = _Browser.Browse((NodeId)rd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
                foreach (ReferenceDescription rdd in subRefs)
                {
+                  MonitoredItem mi = Subscr.AddItem((NodeId)rdd.NodeId);
+                  mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);
                   string[] paths = rdd.NodeId.ToString().Substring(7, rdd.NodeId.ToString().Length - 7).Split('.');
-                  if (paths.Length == 2) // machine status
+                  if (paths.Length == 2 && paths[1] == "ProcessVariables")
                   {
-                     if (paths[1] == "MachineState")
+                     ReferenceDescriptionCollection ProcessVariableRefs = _Browser.Browse((NodeId)rdd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
+                     foreach (var rddd in ProcessVariableRefs)
                      {
-                        //_PersistenceModel.SaveMachineState(paths[0], (string)value, timestamp);
-                     }
-                     else if (paths[1] == "CycleCounter")
-                     {
-                        //_PersistenceModel.SaveMachineCycleCounter(paths[0], (long)value, timestamp);
-                     }
-                     else if (paths[1] == "CycleInterruption")
-                     {
-                        //_PersistenceModel.SaveMachineCycleInterruption(paths[0], (string)value, timestamp);
-                     }
-                     else if (paths[1] == "ProcessVariables")
-                     {
-                        ReferenceDescriptionCollection ProcessVariableRefs = _Browser.Browse((NodeId)rdd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
-                        foreach (ReferenceDescription rddd in ProcessVariableRefs)
-                        {
-                           NodeIdsListForProcessVariables.Add(rddd.NodeId.ToString());
-                        }
-                     }
-                     else
-                     {
-                        _Log.WarnFormat("unexpected path[1] length:{0}", rdd.NodeId);
+                        MonitoredItem mii = Subscr.AddItem((NodeId)rddd.NodeId);
+                        mii.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
                      }
                   }
+                  //if (paths.Length == 2) // machine status
+                  //{
+                  //   if (paths[1] == "MachineState")
+                  //   {
+                  //      //_PersistenceModel.SaveMachineState(paths[0], (string)value, timestamp);
+                  //      //ReferenceDescriptionCollection machineStateRefs = _Browser.Browse((NodeId)rdd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
+                  //      MonitoredItem mi = Subscr.AddItem((NodeId)rdd.NodeId);
+                  //      mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);
+                  //   }
+                  //   else if (paths[1] == "CycleCounter")
+                  //   {
+                  //      //_PersistenceModel.SaveMachineCycleCounter(paths[0], (long)value, timestamp);
+                  //   }
+                  //   else if (paths[1] == "CycleInterruption")
+                  //   {
+                  //      //_PersistenceModel.SaveMachineCycleInterruption(paths[0], (string)value, timestamp);
+                  //   }
+                  //   else if (paths[1] == "ProcessVariables")
+                  //   {
+                  //      ReferenceDescriptionCollection ProcessVariableRefs = _Browser.Browse((NodeId)rdd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
+                  //      foreach (ReferenceDescription rddd in ProcessVariableRefs)
+                  //      {
+                  //         NodeIdsListForProcessVariables.Add(rddd.NodeId.ToString());
+                  //      }
+                  //   }
+                  //   else
+                  //   {
+                  //      _Log.WarnFormat("unexpected path[1] length:{0}", rdd.NodeId);
+                  //   }
+                  //}
                }
             }
-            foreach (var nodeId in NodeIdsListForProcessVariables)
-            {
-               MonitoredItem mi = Subscr.AddItem(nodeId);
-               mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
-            }
+            //foreach (var nodeId in NodeIdsListForProcessVariables)
+            //{
+            //   MonitoredItem mi = Subscr.AddItem(nodeId);
+            //   mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
+            //}
             Subscr.ApplyChanges();
          }
       }
@@ -167,12 +183,41 @@ namespace LHe.OPCUaClientLib
             MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
             if (dataChange != null)
             {
-               object val = dataChange.Value.Value;   // the changed value of the subscribed MonitoredItem
+               object value = dataChange.Value.Value;   // the changed value of the subscribed MonitoredItem
                var nodeId = monitoredItem.ResolvedNodeId;
                //Persist data
                string[] paths = nodeId.ToString().Substring(7, nodeId.ToString().Length - 7).Split('.');
-               //var machineName = paths[0]; var variableName = paths[2];
-               persistenceManager.SaveMachineProcessVariable(paths[0], paths[2], (float)val, DateTime.Now);
+               if (paths.Length == 2) // machine status
+               {
+                  if (paths[1] == "MachineState")
+                  {
+                     _PersistenceModel.SaveMachineState(paths[0], (string)value, DateTime.Now);
+                  }
+                  else if (paths[1] == "CycleCounter")
+                  {
+                     //_PersistenceModel.SaveMachineCycleCounter(paths[0], (long)value, timestamp);
+                  }
+                  else if (paths[1] == "CycleInterruption")
+                  {
+                     _PersistenceModel.SaveMachineCycleInterruption(paths[0], (string)value, DateTime.Now);
+                  }
+                  else
+                  {
+                     _Log.WarnFormat("unexpected path[1] length:{0}", nodeId);
+                  }
+               }
+               else if (paths.Length == 3) // process variable values
+               {
+                  _PersistenceModel.SaveMachineProcessVariable(paths[0], paths[2], (float)value, DateTime.Now);
+               }
+               else if (paths.Length == 4) // units
+               {
+                  //_PersistenceModel.SaveMachineProcessVariable(paths[0], paths[2], (float)value, timestamp);
+               }
+               else
+               {
+                  _Log.WarnFormat("unexpected path length:{0}", nodeId);
+               }
             }
          }
          catch (Exception ex)

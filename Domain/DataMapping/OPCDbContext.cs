@@ -10,6 +10,8 @@ namespace LHe.DomainModel.DataMapping
    public class OPCDbContext : DbContext
    {
       public DbSet<Machine> Machines { get; set; }
+      public DbSet<MachineState> MachineStates { get; set; }
+      public DbSet<CycleInterruption> CycleInterruptions { get; set; }
       public DbSet<ProcessVariable> ProcessVariables { get; set; }
       public OPCDbContext()
           : base("name=OPCDbContext")
