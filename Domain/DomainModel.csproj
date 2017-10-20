@@ -49,12 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CycleInterruption.cs" />
     <Compile Include="DataMapping\OPCDbContext.cs" />
-    <Compile Include="Machine.cs" />
-    <Compile Include="MachineState.cs" />
+    <Compile Include="DataModel.cs" />
     <Compile Include="PersistenceManager.cs" />
-    <Compile Include="ProcessVariable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

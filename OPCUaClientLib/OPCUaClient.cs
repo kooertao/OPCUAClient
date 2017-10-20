@@ -118,8 +118,17 @@ namespace LHe.OPCUaClientLib
             }
             //machine： LHe,Tao
             ReferenceDescriptionCollection refs = _Browser.Browse((NodeId)ServerRoot, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
+
             foreach (ReferenceDescription rd in refs)
             {
+               var aa = ((NodeId)rd.NodeId).ToString();
+               if (((NodeId)rd.NodeId).ToString().Contains("Heartbeat"))
+               {
+                  MonitoredItem miForHeartBeat = Subscr.AddItem((NodeId)rd.NodeId);
+                  miForHeartBeat.Notification += new OnMonitoredItemNotification(miHeartBeat_Notification);
+                  continue;
+               }
+              
                //LHe:MachineState,ProcessVariables and cycleInterrupt
                ReferenceDescriptionCollection subRefs = _Browser.Browse((NodeId)rd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
                foreach (ReferenceDescription rdd in subRefs)
@@ -136,46 +145,27 @@ namespace LHe.OPCUaClientLib
                         mii.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
                      }
                   }
-                  //if (paths.Length == 2) // machine status
-                  //{
-                  //   if (paths[1] == "MachineState")
-                  //   {
-                  //      //_PersistenceModel.SaveMachineState(paths[0], (string)value, timestamp);
-                  //      //ReferenceDescriptionCollection machineStateRefs = _Browser.Browse((NodeId)rdd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
-                  //      MonitoredItem mi = Subscr.AddItem((NodeId)rdd.NodeId);
-                  //      mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);
-                  //   }
-                  //   else if (paths[1] == "CycleCounter")
-                  //   {
-                  //      //_PersistenceModel.SaveMachineCycleCounter(paths[0], (long)value, timestamp);
-                  //   }
-                  //   else if (paths[1] == "CycleInterruption")
-                  //   {
-                  //      //_PersistenceModel.SaveMachineCycleInterruption(paths[0], (string)value, timestamp);
-                  //   }
-                  //   else if (paths[1] == "ProcessVariables")
-                  //   {
-                  //      ReferenceDescriptionCollection ProcessVariableRefs = _Browser.Browse((NodeId)rdd.NodeId, NodeClass.Object | NodeClass.Variable | NodeClass.Method);
-                  //      foreach (ReferenceDescription rddd in ProcessVariableRefs)
-                  //      {
-                  //         NodeIdsListForProcessVariables.Add(rddd.NodeId.ToString());
-                  //      }
-                  //   }
-                  //   else
-                  //   {
-                  //      _Log.WarnFormat("unexpected path[1] length:{0}", rdd.NodeId);
-                  //   }
-                  //}
                }
             }
-            //foreach (var nodeId in NodeIdsListForProcessVariables)
-            //{
-            //   MonitoredItem mi = Subscr.AddItem(nodeId);
-            //   mi.Notification += new OnMonitoredItemNotification(miRamp_Notification);  // notification for this MonitoredItem
-            //}
             Subscr.ApplyChanges();
          }
       }
+
+      private void miHeartBeat_Notification(MonitoredItem monitoredItem, IEncodeable notification)
+      {
+         try
+         {
+            MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
+            if (dataChange != null)
+            {
+               var status = dataChange.Value.StatusCode 
+            }
+         }
+         catch (Exception ex)
+         {
+
+         }
+       }
       private void miRamp_Notification(MonitoredItem monitoredItem, IEncodeable notification)
       {
          try

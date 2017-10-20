@@ -11,6 +11,7 @@ namespace LHe.DomainModel.DataMapping
    {
       public DbSet<Machine> Machines { get; set; }
       public DbSet<MachineState> MachineStates { get; set; }
+      public DbSet<CycleCounter> CycleCounters { get; set; }
       public DbSet<CycleInterruption> CycleInterruptions { get; set; }
       public DbSet<ProcessVariable> ProcessVariables { get; set; }
       public OPCDbContext()
