@@ -53,6 +53,7 @@
     <Compile Include="DataModel.cs" />
     <Compile Include="PersistenceManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UAServerConnectionManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

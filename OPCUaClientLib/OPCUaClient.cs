@@ -24,7 +24,8 @@ namespace LHe.OPCUaClientLib
       private Session _Session;
       //private Subscription _Subscr;
       private Browser _Browser;
-      private PersistenceManager _PersistenceModel = new PersistenceManager();
+      private PersistenceManager _PersistenceManager = new PersistenceManager();
+      private UAServerConnectionManager _ConnectionManager = new UAServerConnectionManager();
 
 
       private const string ServerRoot = "ns=2;s=LHE Machines";
@@ -158,14 +159,17 @@ namespace LHe.OPCUaClientLib
             MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
             if (dataChange != null)
             {
-               var status = dataChange.Value.StatusCode 
+               var status = dataChange.Value.StatusCode;
+
+               _ConnectionManager.UpdateHeartBeat(StatusCode.IsGood(status));
             }
          }
          catch (Exception ex)
          {
 
          }
-       }
+      }
+
       private void miRamp_Notification(MonitoredItem monitoredItem, IEncodeable notification)
       {
          try
@@ -181,7 +185,7 @@ namespace LHe.OPCUaClientLib
                {
                   if (paths[1] == "MachineState")
                   {
-                     _PersistenceModel.SaveMachineState(paths[0], (string)value, DateTime.Now);
+                     _PersistenceManager.SaveMachineState(paths[0], (string)value, DateTime.Now);
                   }
                   else if (paths[1] == "CycleCounter")
                   {
@@ -189,7 +193,7 @@ namespace LHe.OPCUaClientLib
                   }
                   else if (paths[1] == "CycleInterruption")
                   {
-                     _PersistenceModel.SaveMachineCycleInterruption(paths[0], (string)value, DateTime.Now);
+                     _PersistenceManager.SaveMachineCycleInterruption(paths[0], (string)value, DateTime.Now);
                   }
                   else
                   {
@@ -198,7 +202,7 @@ namespace LHe.OPCUaClientLib
                }
                else if (paths.Length == 3) // process variable values
                {
-                  _PersistenceModel.SaveMachineProcessVariable(paths[0], paths[2], (float)value, DateTime.Now);
+                  _PersistenceManager.SaveMachineProcessVariable(paths[0], paths[2], (float)value, DateTime.Now);
                }
                else if (paths.Length == 4) // units
                {

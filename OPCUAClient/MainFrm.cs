@@ -16,6 +16,7 @@ namespace OPCUAClient
       private IHubProxy hubProxy;
       
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
+      private UAServerConnectionManager ConnectionManager = new UAServerConnectionManager();
       public MainFrm()  
       {
          InitializeComponent();
@@ -30,6 +31,8 @@ namespace OPCUAClient
          }
          ConnectHub();
          tbHubState.Text = hubConnection.State.ToString();
+
+         ConnectionManager.OnUpdateHeartBeat += new e
       }
 
       private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
