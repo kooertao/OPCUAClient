@@ -26,6 +26,9 @@ namespace LHe.OPCUaClientLib
       private Browser _Browser;
       private PersistenceManager _PersistenceManager = new PersistenceManager();
       private UAServerConnectionManager _ConnectionManager = new UAServerConnectionManager();
+      public UAServerConnectionManager ConnectionManager {
+         get { return _ConnectionManager; }
+      }
 
 
       private const string ServerRoot = "ns=2;s=LHE Machines";
@@ -159,9 +162,14 @@ namespace LHe.OPCUaClientLib
             MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
             if (dataChange != null)
             {
-               var status = dataChange.Value.StatusCode;
-
-               _ConnectionManager.UpdateHeartBeat(StatusCode.IsGood(status));
+               var beatCount = int.Parse(dataChange.Value.ToString());
+               _ConnectionManager.UpdateHeartBeat(beatCount);
+               //if ((StatusCode.IsGood(status) && ConnectionManager.ConnectState == UAServerConnectionState.Disconnected)||
+               //   (!StatusCode.IsGood(status) && ConnectionManager.ConnectState == UAServerConnectionState.Connected ))
+               //{
+               //   _ConnectionManager.UpdateHeartBeat(StatusCode.IsGood(status));
+               //}
+               
             }
          }
          catch (Exception ex)
