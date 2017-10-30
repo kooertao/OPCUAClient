@@ -16,6 +16,11 @@ namespace LHe.DomainModel
       private UAServerConnectionState _ConnectState;
 
       private int _BeatCount = int.MaxValue;
+      public int BeatCount
+      {
+         get { return _BeatCount; }
+         private set { _BeatCount = value; }
+      }
       public UAServerConnectionState ConnectState
       {
          get { return _ConnectState; }
