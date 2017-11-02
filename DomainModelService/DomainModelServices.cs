@@ -12,10 +12,11 @@ namespace LHe.DomainModelService
    {
       private UAServerConnectionManager _UAServerConnectionManager;
 
-      private static TimeSpan _HeartBeatCheckTimerInterval = new TimeSpan(0, 1, 0);
+      private static TimeSpan _HeartBeatCheckTimerInterval = new TimeSpan(0, 0, 1);
       internal Timer HeartBeatCheckTimer { get; private set; }
       private int HeartBeatCheckCount = 0;
       private int HeartBeatCheckFailedTimes = 0;
+      public event EventHandler<bool> HeartBeatChanged;
 
       public DomainModelServices()
       {
@@ -42,6 +43,17 @@ namespace LHe.DomainModelService
          if (HeartBeatCheckFailedTimes >= 3)
          {
             //failed
+            if (HeartBeatChanged != null)
+            {
+               HeartBeatChanged(this, false);
+            }
+         }
+         else
+         {
+            if (HeartBeatChanged != null)
+            {
+               HeartBeatChanged(this, true);
+            }
          }
       }
    }

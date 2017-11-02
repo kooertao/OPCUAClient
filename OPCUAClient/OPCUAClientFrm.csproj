@@ -138,6 +138,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DomainModelService\DomainModelService.csproj">
+      <Project>{95e8747b-44cc-41d0-85a0-76b68f298a49}</Project>
+      <Name>DomainModelService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Domain\DomainModel.csproj">
       <Project>{4fe636b0-00ff-4e5a-9889-c672ae955373}</Project>
       <Name>DomainModel</Name>

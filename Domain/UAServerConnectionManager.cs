@@ -31,15 +31,16 @@ namespace LHe.DomainModel
 
       public void UpdateHeartBeat(int beatCount)
       {
-         if (beatCount != _BeatCount && UpdateHeartBeatEvent != null)
-         {
-            UpdateHeartBeatEvent(true);
-            _BeatCount = beatCount;
-         }
-         else
-         {
-            UpdateHeartBeatEvent(false);
-         } 
+         BeatCount = beatCount;
+         //if (beatCount != _BeatCount && UpdateHeartBeatEvent != null)
+         //{
+         //   UpdateHeartBeatEvent(true);
+         //   _BeatCount = beatCount;
+         //}
+         //else
+         //{
+         //   UpdateHeartBeatEvent(false);
+         //} 
 
          //_ConnectState = isConnected ? UAServerConnectionState.Connected : UAServerConnectionState.Disconnected;
          //if (UpdateHeartBeatEvent != null)
