@@ -162,14 +162,9 @@ namespace LHe.OPCUaClientLib
             MonitoredItemNotification dataChange = notification as MonitoredItemNotification;
             if (dataChange != null)
             {
+         
                var beatCount = int.Parse(dataChange.Value.ToString());
                _ConnectionManager.UpdateHeartBeat(beatCount);
-               //if ((StatusCode.IsGood(status) && ConnectionManager.ConnectState == UAServerConnectionState.Disconnected)||
-               //   (!StatusCode.IsGood(status) && ConnectionManager.ConnectState == UAServerConnectionState.Connected ))
-               //{
-               //   _ConnectionManager.UpdateHeartBeat(StatusCode.IsGood(status));
-               //}
-               
             }
          }
          catch (Exception ex)

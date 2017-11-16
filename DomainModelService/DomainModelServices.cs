@@ -25,8 +25,7 @@ namespace LHe.DomainModelService
 
       public void Start()
       {
-         _UAServerConnectionManager = new UAServerConnectionManager();
-         HeartBeatCheckCount = _UAServerConnectionManager.BeatCount;
+         HeartBeatCheckCount = UAServerConnectionManager.BeatCount;
          //Init timer
          HeartBeatCheckTimer = new Timer();
          HeartBeatCheckTimer.Interval = _HeartBeatCheckTimerInterval.TotalMilliseconds;
@@ -36,20 +35,22 @@ namespace LHe.DomainModelService
 
       private void OnHeartBeatCheckTimer_Elapsed(object sender, ElapsedEventArgs e)
       {
-         if (_UAServerConnectionManager.BeatCount == HeartBeatCheckCount)
+         if (UAServerConnectionManager.BeatCount == HeartBeatCheckCount)
          {
             HeartBeatCheckFailedTimes++;
-         }
-         if (HeartBeatCheckFailedTimes >= 3)
-         {
-            //failed
-            if (HeartBeatChanged != null)
+            if (HeartBeatCheckFailedTimes >= 3)
             {
-               HeartBeatChanged(this, false);
+               //failed
+               if (HeartBeatChanged != null)
+               {
+                  HeartBeatChanged(this, false);
+               }
             }
          }
          else
          {
+            HeartBeatCheckFailedTimes = 0;
+            HeartBeatCheckCount = UAServerConnectionManager.BeatCount;
             if (HeartBeatChanged != null)
             {
                HeartBeatChanged(this, true);

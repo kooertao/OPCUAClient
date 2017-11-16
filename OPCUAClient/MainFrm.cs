@@ -74,7 +74,10 @@ namespace OPCUAClient
 
       private void OnHeartBeatChanged(object sender, bool isConnected)
       {
-         tbServerState.Text = isConnected ? "Connected." : "Disconnected.";
+         if(tbServerState.InvokeRequired)
+         {
+            tbServerState.Invoke(new MethodInvoker(delegate { tbServerState.Text = isConnected ? "Connected." : "Disconnected."; }));
+         }
       }
    }
 }
