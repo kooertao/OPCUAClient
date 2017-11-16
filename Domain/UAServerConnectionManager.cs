@@ -15,8 +15,8 @@ namespace LHe.DomainModel
    {
       public static int BeatCount = 0;
 
-      //public delegate void UpdateHeartBeatHandler(bool isConnected);   //声明委托
-      //public event UpdateHeartBeatHandler UpdateHeartBeatEvent;
+      public delegate void UpdateHeartBeatHandler(bool isConnected);   //声明委托
+      public event UpdateHeartBeatHandler UpdateHeartBeatEvent;
 
       public void UpdateHeartBeat(int beatCount)
       {
