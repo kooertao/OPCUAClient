@@ -192,7 +192,7 @@ namespace LHe.OPCUaClientLib
                   }
                   else if (paths[1] == "CycleCounter")
                   {
-                     //_PersistenceModel.SaveMachineCycleCounter(paths[0], (long)value, timestamp);
+                     _PersistenceManager.SaveMachineCycleCounter(paths[0], (long)value, DateTime.Now);
                   }
                   else if (paths[1] == "CycleInterruption")
                   {
