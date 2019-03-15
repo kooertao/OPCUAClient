@@ -85,5 +85,21 @@ namespace LHe.DomainModel
             db.SaveChanges();
          }
       }
+
+      public void SaveMachineCycleCounter(string machineName, long cycleCounter, DateTime timestamp)
+      {
+         using (var db = new OPCDbContext())
+         {
+            var machine = GetOrCreateMachine(db, machineName, timestamp);
+            db.CycleCounters.Add(new CycleCounter
+            {
+               Machine = machine,
+               Value = cycleCounter,
+               Timestamp = timestamp
+            });
+            db.SaveChanges();
+         }
+      }
+
    }
 }

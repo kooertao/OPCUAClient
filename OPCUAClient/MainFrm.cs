@@ -6,6 +6,7 @@ using Opc.Ua;
 using Microsoft.AspNet.SignalR.Client;
 using LHe.OPCUaClientLib;
 using LHe.DomainModel;
+using LHe.DomainModelService;
 
 namespace OPCUAClient
 {
@@ -16,9 +17,13 @@ namespace OPCUAClient
       private IHubProxy hubProxy;
       
       private const string UAServerAddress = "opc.tcp://localhost:62841/Advosol/uaPLUS";
+      private DomainModelServices domainModelService;
       public MainFrm()  
       {
          InitializeComponent();
+         domainModelService = new DomainModelServices();
+         domainModelService.Start();
+         domainModelService.HeartBeatChanged += OnHeartBeatChanged;
          Client = new OPCUaClient(UAServerAddress);
          if (Client.IsConnected)
          {
@@ -30,6 +35,12 @@ namespace OPCUAClient
          }
          ConnectHub();
          tbHubState.Text = hubConnection.State.ToString();
+         Client.ConnectionManager.UpdateHeartBeatEvent += UpdateUAServerConnectionState;
+      }
+
+      public void UpdateUAServerConnectionState(bool isConnected)
+      {
+         tbServerState.Text = isConnected ? "Connected." : "Disconnected.";
       }
 
       private void MainFrm_FormClosed(object sender, FormClosedEventArgs e)
@@ -59,6 +70,14 @@ namespace OPCUAClient
             Console.WriteLine(ex.GetError());
          }
  
+      }
+
+      private void OnHeartBeatChanged(object sender, bool isConnected)
+      {
+         if(tbServerState.InvokeRequired)
+         {
+            tbServerState.Invoke(new MethodInvoker(delegate { tbServerState.Text = isConnected ? "Connected." : "Disconnected."; }));
+         }
       }
    }
 }
