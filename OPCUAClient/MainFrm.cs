@@ -79,5 +79,10 @@ namespace OPCUAClient
             tbServerState.Invoke(new MethodInvoker(delegate { tbServerState.Text = isConnected ? "Connected." : "Disconnected."; }));
          }
       }
+
+      private void btnConnectBackEndServcie_Click(object sender, EventArgs e)
+      {
+
+      }
    }
 }

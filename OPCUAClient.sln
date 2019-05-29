@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPCUAClientFrm", "OPCUAClient\OPCUAClientFrm.csproj", "{620B0DD3-FB94-46BE-B275-00260757A25D}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OPCUaClientLib", "OPCUaClientLib\OPCUaClientLib.csproj", "{DF71DADD-8406-4E45-86EE-FB9857EE585B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DomainModelService", "DomainModelService\DomainModelService.csproj", "{95E8747B-44CC-41D0-85A0-76B68F298A49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MachineService", "MachineService\MachineService.csproj", "{4F72EA8D-395D-438D-BBA7-3F3A5E220B23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{95E8747B-44CC-41D0-85A0-76B68F298A49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{95E8747B-44CC-41D0-85A0-76B68F298A49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{95E8747B-44CC-41D0-85A0-76B68F298A49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F72EA8D-395D-438D-BBA7-3F3A5E220B23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F72EA8D-395D-438D-BBA7-3F3A5E220B23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F72EA8D-395D-438D-BBA7-3F3A5E220B23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F72EA8D-395D-438D-BBA7-3F3A5E220B23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
